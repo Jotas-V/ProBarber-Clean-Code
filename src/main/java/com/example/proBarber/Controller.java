@@ -1,10 +1,6 @@
 package com.example.proBarber;
 
 import com.example.proBarber.dto.*;
-import com.example.proBarber.repository.CabecalhoRepository;
-import com.example.proBarber.repository.EstoqueRepository;
-import com.example.proBarber.repository.GeladeiraRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("/")
@@ -22,13 +20,13 @@ public class Controller {
 
 
 
-  @Autowired
-    private CabecalhoRepository cabRepository;
+    private final List<CabecalhoDTO> cabecalhos = new CopyOnWriteArrayList<>();
+    private final List<GeladeiraDTO> alimentos = new CopyOnWriteArrayList<>();
+    private final List<EstoqueDTO> estoques = new CopyOnWriteArrayList<>();
 
-  @Autowired
-    private GeladeiraRepository geladeiraRepository;
-
-  @Autowired private EstoqueRepository estoqueRepository;
+    private final AtomicLong cabecalhoIds = new AtomicLong();
+    private final AtomicLong alimentoIds = new AtomicLong();
+    private final AtomicLong estoqueIds = new AtomicLong();
 
     String PostMensagem= "SUCESSO";
 
@@ -136,56 +134,43 @@ public class Controller {
         itemList.add(itensDeVenda);
         return ResponseEntity.status(200).body(respostaItem);
     }
-    // Get e Post do Cabeçalho
     @GetMapping("/cabecalho")
-    public  List<CabecalhoDTO> getAllCab (){
-        List<CabecalhoDTO> cabList =cabRepository.findAll().stream().map(CabecalhoDTO::new).toList();
-        return cabList;}
+    public List<CabecalhoDTO> getAllCab() {
+        return List.copyOf(cabecalhos);
+    }
 
     @PostMapping("/cabecalho")
-    public  void saveCabecalho(@RequestBody CabecalhoRequestDTO data){
-        Cabecalho cabData = new Cabecalho();
-        cabRepository.save(cabData);
-        return;
+    public void saveCabecalho(@RequestBody CabecalhoRequestDTO data) {
+        cabecalhos.add(new CabecalhoDTO(cabecalhoIds.incrementAndGet(), data.pedidoNumero(),
+                data.data(), data.usuario(), data.valorTotal()));
     }
 
     @GetMapping("/geladeira")
-    public List<GeladeiraDTO>getAllGel(){
-        List<GeladeiraDTO> gelaList = geladeiraRepository.findAll().stream().map(GeladeiraDTO::new).toList();
-        return gelaList;
+    public List<GeladeiraDTO> getAllGel() {
+        return List.copyOf(alimentos);
     }
 
     @PostMapping("/geladeira")
-    public  void saveGeladeira(@RequestBody GeladeiraRequestDTO data){
-        Geladeira gelData = new Geladeira();
-        geladeiraRepository.save(gelData);
-        return;
+    public void saveGeladeira(@RequestBody GeladeiraRequestDTO data) {
+        alimentos.add(new GeladeiraDTO(alimentoIds.incrementAndGet(), data.nomeAlimento(),
+                data.valorAlimento()));
     }
 
-
-
-
     @GetMapping("/estoque")
-    public List<EstoqueDTO>getAllEst(){
-        List<EstoqueDTO> estList = estoqueRepository.findAll().stream().map(EstoqueDTO::new).toList();
-        return estList;
+    public List<EstoqueDTO> getAllEst() {
+        return List.copyOf(estoques);
     }
 
     @PostMapping("/estoque")
-    public  void saveEstoque(@RequestBody EstoqueRequestDTO data){
-        Estoque estData = new Estoque();
-        estoqueRepository.save(estData);
-        return;
+    public void saveEstoque(@RequestBody EstoqueRequestDTO data) {
+        estoques.add(new EstoqueDTO(estoqueIds.incrementAndGet(), data.produtosList(),
+                data.geladeiraList()));
     }
-
-
-
-
 
     @GetMapping("/dashboard")
     public ResponseEntity<Object> getDashboardData() {
         Map<String, Object> dashboardData = new HashMap<>();
-        List<CabecalhoDTO> cabList =cabRepository.findAll().stream().map(CabecalhoDTO::new).toList();
+        List<CabecalhoDTO> cabList = List.copyOf(cabecalhos);
 
         dashboardData.put("totalProdutos", prodList.size());
         dashboardData.put("totalServicos", servList.size());
