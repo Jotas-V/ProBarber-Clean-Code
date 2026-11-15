@@ -3,7 +3,7 @@
 ## Equipe e repositório
 
 - Integrante registrado nesta versão: João Vitor Rodrigues Rocha.
-- Repositório público previsto: `Jotas-V/ProBarber-Clean-Code` no GitHub, a ser criado pelo integrante. O endereço deve ser confirmado antes do envio.
+- Repositório público: [Jotas-V/ProBarber-Clean-Code](https://github.com/Jotas-V/ProBarber-Clean-Code).
 - Branch `original`: `eabd2a17026f4ef55e3d9874e216c6e358536a51`. As medições usam esse commit, com o código anterior à refatoração.
 - Branch `main`: base para o dossiê e para os futuros PRs de refatoração. As duas branches já existem no repositório local.
 - Escopo: ProBarber Backend completo, com 885 linhas Java de produção. O projeto supera em 85 linhas o máximo de 800 previsto no enunciado. A equipe manteve o projeto integral para consultar o professor. A aprovação do escopo está pendente.
@@ -89,7 +89,7 @@ Plano condicionado à aprovação do escopo. Antes do primeiro PR, registrar os 
 | 6 | S03 — Explicitar a fronteira entre os modelos de produto | Renomear método | Simplificação de chamadas | Nomes externos no JSON e no banco preservados por mapeamento explícito onde necessário. |
 | 7 | S05 — Remover os CRUDs sem consumidores | Incorporar classe quando houver comportamento aproveitável e remover código morto verificado | Movimentação de recursos | Busca de referências, compilação e testes de regressão. |
 
-Cada refatoração terá seu próprio PR. A equipe distribuirá autoria e revisão para atender ao mínimo de dois PRs de autoria e dois de revisão por integrante. Cada PR terá pelo menos uma aprovação de outro integrante, comentário substantivo classificado e resolvido e checks verdes antes do merge. O template identificará smell, técnica, teste, lint e cobertura. A proteção de `original` e `main` será configurada após a criação do remoto.
+Cada refatoração terá seu próprio PR. A equipe distribuirá autoria e revisão para atender ao mínimo de dois PRs de autoria e dois de revisão por integrante. Cada PR terá pelo menos uma aprovação de outro integrante, comentário substantivo classificado e resolvido e checks verdes antes do merge. O template identificará smell, técnica, teste, lint e cobertura. A proteção de `original` e `main` será configurada no GitHub.
 
 ## Ferramentas previstas
 
@@ -105,7 +105,7 @@ Cada refatoração terá seu próprio PR. A equipe distribuirá autoria e revis�
 
 ## Riscos, limitações e exclusões
 
-- **Aprovação de escopo.** O backend integral supera o limite de linhas. A entrega registra a medição real para avaliação do professor. A equipe ainda precisa completar a identificação do grupo de 3 a 4 integrantes e confirmar o endereço público.
+- **Aprovação de escopo.** O backend integral supera o limite de linhas. A entrega registra a medição real para avaliação do professor. A equipe ainda precisa completar a identificação do grupo de 3 a 4 integrantes.
 - **Demonstração do legado.** O commit original está preservado, mas o teste de contexto falha no mapeamento JPA. A demonstração executável está pendente. As rotas e cálculos isoláveis podem ser caracterizados por testes sem contexto Spring enquanto a equipe investiga a inicialização.
 - **Compatibilidade.** Instâncias em memória e entidades JPA coexistem. Os PRs devem proteger os endpoints, as chaves JSON, os cálculos dos relatórios e a ordenação observada. Correções que mudem comportamento existente, inclusive POSTs que hoje ignoram o DTO recebido, precisam de decisão explícita e evidência.
 - **Fora da refatoração.** Interface de usuário, autenticação nova, migração de banco ou de framework e novas funcionalidades de negócio ficam fora do escopo proposto. A configuração local do PostgreSQL deve servir apenas ao ambiente de desenvolvimento.
