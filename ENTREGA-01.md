@@ -4,7 +4,7 @@
 
 - Integrante registrado nesta versão: João Vitor Rodrigues Rocha.
 - Repositório público: [Jotas-V/ProBarber-Clean-Code](https://github.com/Jotas-V/ProBarber-Clean-Code).
-- Branch `original`: `eabd2a17026f4ef55e3d9874e216c6e358536a51`. As medições usam esse commit, com o código anterior à refatoração.
+- Branch `original`: `28832993c4e11dcad5375b15ca75450998a68042`. O baseline histórico foi medido antes da limpeza da configuração. O commit publicado tem os mesmos fontes Java do legado e omite a configuração do banco.
 - Branch `main`: base para o dossiê e para os futuros PRs de refatoração. As duas branches já existem no repositório local.
 - Escopo: ProBarber Backend completo, com 885 linhas Java de produção. O projeto supera em 85 linhas o máximo de 800 previsto no enunciado. A equipe manteve o projeto integral para consultar o professor. A aprovação do escopo está pendente.
 
@@ -107,8 +107,8 @@ Cada refatoração terá seu próprio PR. A equipe distribuirá autoria e revis�
 
 - **Aprovação de escopo.** O backend integral supera o limite de linhas. A entrega registra a medição real para avaliação do professor. A equipe ainda precisa completar a identificação do grupo de 3 a 4 integrantes.
 - **Demonstração do legado.** O commit original está preservado, mas o teste de contexto falha no mapeamento JPA. A demonstração executável está pendente. As rotas e cálculos isoláveis podem ser caracterizados por testes sem contexto Spring enquanto a equipe investiga a inicialização.
-- **Compatibilidade.** Instâncias em memória e entidades JPA coexistem. Os PRs devem proteger os endpoints, as chaves JSON, os cálculos dos relatórios e a ordenação observada. Correções que mudem comportamento existente, inclusive POSTs que hoje ignoram o DTO recebido, precisam de decisão explícita e evidência.
+- **Compatibilidade.** Instâncias em memória e entidades JPA coexistem. Os PRs devem proteger os endpoints, as chaves JSON, os cálculos dos relatórios e a ordenação observada. Em `main`, os cadastros de cabeçalho, geladeira e estoque passaram a usar os DTOs recebidos e a guardar registros em memória, perdidos ao reiniciar. Três testes MockMvc verificaram esses fluxos e a soma de vendas no dashboard.
 - **Fora da refatoração.** Interface de usuário, autenticação nova, migração de banco ou de framework e novas funcionalidades de negócio ficam fora do escopo proposto. A configuração local do PostgreSQL deve servir apenas ao ambiente de desenvolvimento.
-- **Repositório público.** Há configuração de conexão local no histórico. Validar que os valores são exclusivos de desenvolvimento e que o grupo tem autorização para republicar o legado antes de enviar o Git completo.
+- **Repositório público.** A configuração de conexão foi removida de todo o histórico das branches publicadas, o que alterou os hashes dos commits afetados.
 
 [Enunciado do Projeto Final de Clean Code](https://cleancode.venson.dev/projetos/projeto_refatoracao/)
