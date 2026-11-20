@@ -2,17 +2,22 @@
 
 ## Equipe e repositório
 
-- Integrante registrado nesta versão: João Vitor Rodrigues Rocha.
-- Repositório público: [Jotas-V/ProBarber-Clean-Code](https://github.com/Jotas-V/ProBarber-Clean-Code).
+- Integrantes: Alexandre Destro, Davi Carlos, João Vitor Rodrigues Rocha, Willian Manoel Mesquita.
+- Repositório público do trabalho — [https://github.com/Jotas-V/ProBarber-Clean-Code](https://github.com/Jotas-V/ProBarber-Clean-Code)
+- Versões publicadas — [original](https://github.com/Jotas-V/ProBarber-Clean-Code/tree/original) e [main](https://github.com/Jotas-V/ProBarber-Clean-Code/tree/main).
 - Branch `original`: `28832993c4e11dcad5375b15ca75450998a68042`. O baseline histórico foi medido antes da limpeza da configuração. O commit publicado tem os mesmos fontes Java do legado e omite a configuração do banco.
-- Branch `main`: base para o dossiê e para os futuros PRs de refatoração. As duas branches já existem no repositório local.
+- Branch `main`: base para o dossiê e para os futuros PRs de refatoração. As duas versões já estão publicadas no GitHub.
 - Escopo: ProBarber Backend completo, com 885 linhas Java de produção. O projeto supera em 85 linhas o máximo de 800 previsto no enunciado. A equipe manteve o projeto integral para consultar o professor. A aprovação do escopo está pendente.
 
 ## Software
 
-O ProBarber Backend é uma API REST em Java 17, Spring Boot 3.2.4 e Maven para operação de uma barbearia. Usa Spring MVC para os endpoints e Spring Data JPA, Hibernate e PostgreSQL para persistência. Há operações de consulta e cadastro para produtos, serviços, itens de venda, cabeçalhos de venda, geladeira e estoque. O controller também expõe relatórios de produtos e serviços e um dashboard de vendas.
+O ProBarber Backend é uma API REST para operação de uma barbearia, desenvolvida anteriormente no projeto integrador do curso. A stack inclui Java 17, Spring Boot 3.2.4, Spring MVC e Maven. As funcionalidades abrangem consulta e cadastro de produtos, serviços, itens de venda, cabeçalhos de venda, geladeira e estoque, além de relatórios de produtos e serviços e um dashboard de vendas.
 
-Produtos, serviços e itens de venda ficam em listas em memória. Cabeçalhos, geladeira e estoque têm repositórios JPA. As rotas descrevem a implementação encontrada no commit original. A inicialização do contexto Spring falhou no teste existente, por isso o funcionamento ponta a ponta ainda precisa ser validado.
+Na versão legada registrada em `original`, produtos, serviços e itens de venda ficam em listas em memória. Cabeçalhos, geladeira e estoque usam repositórios Spring Data JPA, Hibernate e PostgreSQL. O teste de contexto dessa versão falhou no mapeamento JPA de `Geladeira`.
+
+A preparação já realizada em `main` retirou a configuração de conexão e o driver PostgreSQL, desativou a criação automática de uma fonte de dados e adaptou os cadastros de cabeçalho, geladeira e estoque para memória. Os registros dessas rotas são perdidos ao reiniciar a aplicação. Os POSTs passaram a aproveitar os DTOs recebidos, alterando o comportamento legado que ignorava esses dados. Três testes de integração HTTP passaram após a adaptação, verificando os cadastros e o total de vendas do dashboard. A mudança foi registrada no commit `3a58b7f` e entrou diretamente em `main`, sem PR ou revisão por outro integrante. A equipe deve apresentar essa preparação e suas limitações ao professor.
+
+[Implementação da adaptação e dos testes](https://github.com/Jotas-V/ProBarber-Clean-Code/commit/3a58b7f)
 
 ## Contagem de linhas
 
@@ -31,7 +36,7 @@ SUM:                            24            300              4            885
 
 ## Baseline medido
 
-Comandos em Windows, executados contra o checkout legado com o Maven Wrapper 3.9.5. Os plugins foram chamados diretamente pelo Maven, sem alterar o POM nem criar commits no legado.
+Medições realizadas em 15/11/2026 no checkout legado anterior à higienização do histórico, com Maven Wrapper 3.9.5. Os plugins foram chamados diretamente pelo Maven, sem alterar o POM. Os fontes Java são iguais aos de `original`, cujo hash publicado está registrado acima. A configuração do banco foi removida na publicação, portanto a causa da falha de inicialização ao repetir os testes pode diferir da observada no baseline. Os resultados abaixo descrevem aquela execução histórica.
 
 | Métrica | Resultado | Evidência gerada |
 | --- | --- | --- |
@@ -72,24 +77,29 @@ Os caminhos são relativos a `src/main/java/com/example/proBarber/` no commit de
 | S03 | Classes alternativas com interfaces diferentes | Abusos de orientação a objetos | `Produtos.java:11`, `model/Produto.java:12` | As duas representações de produto usam APIs diferentes para nome, ID e preço. A correspondência entre modelos precisa ser explícita para evitar conversões inconsistentes e mudanças no contrato HTTP ou JPA. |
 | S04 | Mudança em espingarda | Impedidores de mudança | `Controller.java:55`, `Controller.java:80`, `Controller.java:132` | Uma alteração no envelope comum de sucesso exige mudanças nos três POSTs que montam o mesmo mapa e escolhem o mesmo status HTTP. |
 | S05 | Código morto | Dispensáveis | `ProdutosCRUD.java:6`, `EstoqueCRUD.java:6` | As duas classes mantêm operações paralelas sem referências por parte dos fluxos rastreados. Sua presença dificulta identificar quais operações realmente atendem a API. |
-| S06 | Intimidade inapropriada | Acopladores | `Controller.java:19`, `Controller.java:43`, `Controller.java:59`, `Controller.java:91` | O controller retorna coleções mutáveis que usa como armazenamento. Cadastro, consulta e ordenação dependem da mesma representação e compartilham seus efeitos. |
+| S06 | Inveja de função | Acopladores | `Controller.java:99` a `103`, `Servicos.java:3` | O trecho que representa um serviço no relatório consulta ID, nome e valor de `Servicos` para montar seu texto dentro do controller. Esse trecho concentra conhecimento da representação do serviço fora da classe que possui os dados. A hipótese de diagnóstico será validada ao isolar e mover esse comportamento, preservando o contrato do relatório. |
 | S07 | Lista longa de parâmetros | Inchaços | `ItensDeVenda.java:12`, `Controller.java:124` | A construção de um item usa seis argumentos posicionais. A duplicação desse mapeamento no controller aumenta o risco de erro ao evoluir os dados da venda. |
 
 ## Plano de refatoração
 
-Plano condicionado à aprovação do escopo. Antes do primeiro PR, registrar os contratos de rotas e os comportamentos observáveis que os testes devem proteger. A falha JPA deve ser tratada explicitamente em um PR de correção com teste de inicialização e evidência do contrato esperado. Esse PR é adicional aos sete PRs de refatoração abaixo.
+Plano condicionado à aprovação do escopo pelo professor. Antes de cada refatoração, criar testes de caracterização dos contratos HTTP, cálculos, texto e ordenação afetados. A adaptação para memória descrita acima já foi concluída e fica registrada como preparação do projeto.
+
+São previstos oito PRs de refatoração, distribuídos entre os quatro integrantes com duas autorias por pessoa. Cada integrante também deverá revisar pelo menos dois PRs de colegas. A tabela contempla composição de métodos, movimentação de recursos, organização de dados e simplificação de chamadas, totalizando quatro grupos do catálogo do Tópico 11.
 
 | Ordem | PR previsto | Técnica do catálogo | Grupo | Verificação prevista |
 | --- | --- | --- | --- | --- |
 | 1 | S04 — Centralizar o envelope de sucesso | Extrair método | Composição de métodos | Status 200 e chaves `dados` e `Retorno` nos três POSTs. |
-| 2 | S02 — Isolar o cálculo e a formatação do relatório | Extrair método | Composição de métodos | Texto, ordem, total e efeito da ordenação sobre a consulta. |
+| 2 | S02 — Separar as etapas do relatório de serviços | Extrair método | Composição de métodos | Texto, total e efeito da ordenação sobre a consulta. |
 | 3 | S07 — Simplificar a cópia de itens de venda | Preservar objeto inteiro | Simplificação de chamadas | Os seis campos e o JSON do item de venda permanecem equivalentes. |
-| 4 | S06 — Encapsular as coleções em memória | Encapsular coleção | Organização de dados | Cadastro, listagem e ordem observada pelos clientes. |
-| 5 | S01 — Dividir as responsabilidades do controller | Extrair classe | Movimentação de recursos | Rotas, status, corpos de resposta e interação com repositórios. |
-| 6 | S03 — Explicitar a fronteira entre os modelos de produto | Renomear método | Simplificação de chamadas | Nomes externos no JSON e no banco preservados por mapeamento explícito onde necessário. |
-| 7 | S05 — Remover os CRUDs sem consumidores | Incorporar classe quando houver comportamento aproveitável e remover código morto verificado | Movimentação de recursos | Busca de referências, compilação e testes de regressão. |
+| 4 | S01 — Controlar o acesso às listas em memória | Encapsular coleção | Organização de dados | Cadastro, listagem e ordem observada pelos clientes. |
+| 5 | S01 — Dividir as responsabilidades do controller | Extrair classe | Movimentação de recursos | Rotas, status, corpos de resposta e armazenamento em memória. |
+| 6 | S03 — Alinhar as operações equivalentes dos modelos de produto | Renomear método | Simplificação de chamadas | Identificar primeiro os consumidores e as diferenças de campos e tipos. Renomear somente operações equivalentes, preservando o JSON por mapeamento explícito quando necessário. |
+| 7 | S05 — Remover os CRUDs sem consumidores | Remover código morto após verificar referências | Limpeza complementar, fora dos quatro grupos contabilizados | Busca de referências, compilação e testes de regressão dos fluxos ativos. |
+| 8 | S06 — Reposicionar a representação textual de um serviço | Mover método, após a extração do PR 2 | Movimentação de recursos | Transferir para `Servicos` a montagem do trecho com ID, nome e valor de um serviço. Preservar exatamente o texto do relatório e manter cabeçalho, totais e resposta HTTP no componente que coordena o relatório. |
 
-Cada refatoração terá seu próprio PR. A equipe distribuirá autoria e revisão para atender ao mínimo de dois PRs de autoria e dois de revisão por integrante. Cada PR terá pelo menos uma aprovação de outro integrante, comentário substantivo classificado e resolvido e checks verdes antes do merge. O template identificará smell, técnica, teste, lint e cobertura. A proteção de `original` e `main` será configurada no GitHub.
+Cada refatoração terá seu próprio PR. Todo PR deverá ter ao menos uma aprovação de outro integrante, checks verdes e comentário substantivo de revisão apontando código, classificado como bloqueante ou não bloqueante e resolvido antes do merge. O template identificará smell, técnica, teste, lint e cobertura. A proteção de `original` e `main`, o template, os hooks e o CI ainda precisam ser configurados para a etapa de execução.
+
+[Catálogo de smells do Tópico 10](https://cleancode.venson.dev/slides/topico10-code_smells.html) e [técnicas do Tópico 11](https://cleancode.venson.dev/slides/topico11-refatoracao.html)
 
 ## Ferramentas previstas
 
@@ -101,14 +111,15 @@ Cada refatoração terá seu próprio PR. A equipe distribuirá autoria e revis�
 | Cobertura | JaCoCo, com meta de aproximadamente 50% e relatório de linhas e branches. |
 | CI | GitHub Actions com build Java 17, testes, lint, cobertura e lint de commits. |
 | Hooks | `pre-commit` para lint do Java e `commit-msg` com commitlint e Conventional Commits. |
-| IA | OpenAI Codex foi usado na análise inicial, na execução das medições e na redação deste dossiê. A equipe revisará o dossiê e registrará o modelo exibido na interface quando identificado. Código eventualmente gerado será revisado por um integrante e testado antes do merge. |
+| IA | OpenAI Codex, identificado nesta sessão como agente baseado em GPT-6, foi usado na análise do código, nas medições, na redação e revisão do dossiê e na implementação da adaptação para memória com seus testes. A identificação exata da versão utilizada na execução inicial não foi registrada. Três testes HTTP passaram, e a revisão humana do código gerado pela equipe ainda precisa ser registrada. Nos próximos PRs, um colega revisará o código e os resultados dos testes antes do merge. |
 
 ## Riscos, limitações e exclusões
 
-- **Aprovação de escopo.** O backend integral supera o limite de linhas. A entrega registra a medição real para avaliação do professor. A equipe ainda precisa completar a identificação do grupo de 3 a 4 integrantes.
-- **Demonstração do legado.** O commit original está preservado, mas o teste de contexto falha no mapeamento JPA. A demonstração executável está pendente. As rotas e cálculos isoláveis podem ser caracterizados por testes sem contexto Spring enquanto a equipe investiga a inicialização.
-- **Compatibilidade.** Instâncias em memória e entidades JPA coexistem. Os PRs devem proteger os endpoints, as chaves JSON, os cálculos dos relatórios e a ordenação observada. Em `main`, os cadastros de cabeçalho, geladeira e estoque passaram a usar os DTOs recebidos e a guardar registros em memória, perdidos ao reiniciar. Três testes MockMvc verificaram esses fluxos e a soma de vendas no dashboard.
-- **Fora da refatoração.** Interface de usuário, autenticação nova, migração de banco ou de framework e novas funcionalidades de negócio ficam fora do escopo proposto. A configuração local do PostgreSQL deve servir apenas ao ambiente de desenvolvimento.
-- **Repositório público.** A configuração de conexão foi removida de todo o histórico das branches publicadas, o que alterou os hashes dos commits afetados.
+- **Aprovação de escopo.** O projeto integral tem 885 linhas Java de produção, acima do intervalo de 400 a 800 definido no enunciado. A equipe mantém a contagem real e submeterá esse tamanho ao professor. A aceitação está pendente.
+- **Demonstração do legado.** `original` conserva os fontes Java legados e omite a configuração do banco. A execução dessa versão para demonstração continua pendente. A retirada das credenciais alterou os hashes do histórico, e o hash publicado está registrado no início deste dossiê.
+- **Compatibilidade e armazenamento.** A preparação de `main` passou a armazenar cabeçalhos, geladeira e estoque em memória e a usar os DTOs recebidos. A equipe deve justificar essa mudança de comportamento. As próximas refatorações devem proteger os endpoints, as chaves JSON, os cálculos e a ordenação observada. Os dados em memória são perdidos ao encerrar o processo.
+- **Evidências históricas.** As medições do baseline precedem a retirada da configuração. Os relatórios em `target/` são locais e não acompanham o clone. A tabela registra os resultados observados, e os comandos permitem repetir as medições, observadas as diferenças de configuração descritas. A evidência original disponível deve ser anexada ou publicada para consulta do professor.
+- **Trabalho incremental.** A adaptação para memória entrou diretamente em `main`. Os oito PRs planejados devem produzir evidências reais de autoria, revisão e evolução durante a próxima etapa.
+- **Exclusões.** Interface de usuário, autenticação nova, migração de framework, novas funcionalidades de negócio, conexão com banco e persistência entre reinicializações ficam fora do escopo proposto.
 
 [Enunciado do Projeto Final de Clean Code](https://cleancode.venson.dev/projetos/projeto_refatoracao/)
